@@ -28,7 +28,7 @@ public class DealActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert);
-        FirebaseUtil.openReference("TravelDeal",this);
+//        FirebaseUtil.openReference("TravelDeal",this);
         firebaseDatabase = FirebaseUtil.firebaseDatabase;
         databaseReference = FirebaseUtil.databaseReference;
         etTitle = findViewById(R.id.etTitle);
@@ -49,6 +49,16 @@ public class DealActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.save_menu, menu);
+        if (FirebaseUtil.isAdmin){
+                menu.findItem(R.id.save_menu).setVisible(true);
+                menu.findItem(R.id.delete_menu).setVisible(true);
+                editTextEnabled(true);
+        }
+        else {
+            menu.findItem(R.id.save_menu).setVisible(false);
+            menu.findItem(R.id.delete_menu).setVisible(false);
+            editTextEnabled(false);
+        }
         return true;
     }
 
@@ -102,6 +112,11 @@ public class DealActivity extends AppCompatActivity {
     private void backList(){
         Intent backIntent = new Intent(this,ListActivity.class);
         startActivity(backIntent);
+    }
+    private void editTextEnabled(boolean isEnabled){
+        etTitle.setEnabled(isEnabled);
+        etPrice.setEnabled(isEnabled);
+        etDescription.setEnabled(isEnabled);
     }
 
 }
