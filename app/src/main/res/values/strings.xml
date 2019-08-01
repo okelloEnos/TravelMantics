@@ -4,4 +4,8 @@
     <string name="hint_price">Deal Price(Decimal Only)</string>
     <string name="search">Search</string>
     <string name="hint_description">Description</string>
+    <string name="new_travel_deal">New Travel Deal</string>
+    <string name="delete_deal">Delete Deal</string>
+    <string name="save">Save</string>
+    <string name="log_out">Log Out</string>
 </resources>
