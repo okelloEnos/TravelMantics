@@ -14,17 +14,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class InsertActivity extends AppCompatActivity {
-    private FirebaseDatabase mfirebaseDatabase;
-    private DatabaseReference mdatabaseReference;
-    private EditText etTitle,etPrice,etDescription;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReference;
+    private EditText etTitle;
+    private EditText etPrice;
+    private EditText etDescription;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert);
-        mfirebaseDatabase = FirebaseDatabase.getInstance();
-        mdatabaseReference = mfirebaseDatabase.getReference().child("TravelDeal");
+        FirebaseUtil.openReference("TravelDeal");
+        firebaseDatabase = FirebaseUtil.firebaseDatabase;
+        databaseReference = FirebaseUtil.databaseReference;
         etTitle = findViewById(R.id.etTitle);
         etPrice = findViewById(R.id.etPrice);
         etDescription = findViewById(R.id.etDescription);
@@ -40,14 +43,14 @@ public class InsertActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.save_menu:
-                    save();
-                    Toast.makeText(this, "Deal Saved", Toast.LENGTH_LONG).show();
-                    clean();
-                    return true;
+                    case R.id.save_menu:
+                            save();
+                            Toast.makeText(this, "Deal Saved", Toast.LENGTH_LONG).show();
+                            clean();
+                            return true;
 
-                default:
-                    return super.onOptionsItemSelected(item);
+                    default:
+                            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -55,6 +58,7 @@ public class InsertActivity extends AppCompatActivity {
         etTitle.setText("");
         etPrice.setText("");
         etDescription.setText("");
+        etTitle.requestFocus();
     }
 
     private void save() {
@@ -62,7 +66,7 @@ public class InsertActivity extends AppCompatActivity {
         String price = etPrice.getText().toString();
         String description = etDescription.getText().toString();
         TravelDeal deal = new TravelDeal(title, price, description, "");
-        mdatabaseReference.push().setValue(deal);
+        databaseReference.push().setValue(deal);
     }
 
 }
