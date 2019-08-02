@@ -1,39 +1,52 @@
 package com.okellosoftwarez.travelmantics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 public class DealActivity extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReference;
+    private static final int PICTURE = 42;
     EditText etTitle;
     EditText etPrice;
     EditText etDescription;
     TravelDeal deal;
+    ImageView detailImage;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_insert);
-//        FirebaseUtil.openReference("TravelDeal",this);
+        setContentView(R.layout.activity_deal);
         firebaseDatabase = FirebaseUtil.firebaseDatabase;
         databaseReference = FirebaseUtil.databaseReference;
         etTitle = findViewById(R.id.etTitle);
         etPrice = findViewById(R.id.etPrice);
         etDescription = findViewById(R.id.etDescription);
+        detailImage = findViewById(R.id.image);
         Intent passedIntent = getIntent();
         TravelDeal deal = (TravelDeal) passedIntent.getSerializableExtra("Deal");
         if (deal == null){
@@ -43,6 +56,19 @@ public class DealActivity extends AppCompatActivity {
         etTitle.setText(deal.getTitle());
         etDescription.setText(deal.getDescription());
         etPrice.setText(deal.getPrice());
+        showImage(deal.getImageUrl());
+        Button btnImage = findViewById(R.id.btnSearch);
+        btnImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent imageIntent = new Intent();
+                imageIntent.setType("image/*");
+                imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+                imageIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(imageIntent.createChooser(imageIntent, "Insert Image"),PICTURE);
+
+            }
+        });
     }
 
     @Override
@@ -62,6 +88,50 @@ public class DealActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICTURE && resultCode == RESULT_OK && data != null && data.getData() != null){
+            Uri imageUri = data.getData();
+//            int width = Resources.getSystem().getDisplayMetrics().widthPixels;
+//            Picasso.with(this)
+//                    .load(imageUri)
+//                    .resize(width, width*2/3)
+//                    .centerCrop()
+//                    .into(detailImage);
+            StorageReference reference = FirebaseUtil.storageReference.child(imageUri.getLastPathSegment());
+            reference.putFile(imageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                    String url = taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
+//                    deal.setImageUrl(url);
+//                    showImage(url);
+//                    if (taskSnapshot.getMetadata() != null) {
+//                        if (taskSnapshot.getMetadata().getReference() != null) {
+//                            Task<Uri> result = taskSnapshot.getStorage().getDownloadUrl();
+//                            result.addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                                @Override
+//                                public void onSuccess(Uri uri) {
+//                                    String imageUrl = uri.toString();
+                                    //createNewPost(imageUrl);
+                    if (taskSnapshot.getMetadata() != null){
+                        if (taskSnapshot.getMetadata().getReference() != null){
+                            Task<Uri> result = taskSnapshot.getStorage().getDownloadUrl();
+                            result.addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    String imageUrl = uri.toString();
+                                    deal.setImageUrl(imageUrl);
+                                    showImage(imageUrl);
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        }
+    }
+//                }});
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
@@ -117,6 +187,17 @@ public class DealActivity extends AppCompatActivity {
         etTitle.setEnabled(isEnabled);
         etPrice.setEnabled(isEnabled);
         etDescription.setEnabled(isEnabled);
+    }
+    private void showImage(String url){
+        if (url != null && url.isEmpty() == false){
+            int width = Resources.getSystem().getDisplayMetrics().widthPixels;
+            Picasso.with(this)
+                    .load(url)
+                    .resize(width, width*2/3)
+                    .centerCrop()
+                    .into(detailImage);
+        }
+
     }
 
 }
