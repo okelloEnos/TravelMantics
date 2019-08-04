@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
@@ -79,11 +81,13 @@ public class DealActivity extends AppCompatActivity {
                 menu.findItem(R.id.save_menu).setVisible(true);
                 menu.findItem(R.id.delete_menu).setVisible(true);
                 editTextEnabled(true);
+                findViewById(R.id.btnSearch).setEnabled(true);
         }
         else {
             menu.findItem(R.id.save_menu).setVisible(false);
             menu.findItem(R.id.delete_menu).setVisible(false);
             editTextEnabled(false);
+            findViewById(R.id.btnSearch).setEnabled(false);
         }
         return true;
     }
@@ -122,11 +126,15 @@ public class DealActivity extends AppCompatActivity {
                                 public void onSuccess(Uri uri) {
                                     String imageUrl = uri.toString();
                                     deal.setImageUrl(imageUrl);
+                                    Log.d("Url: ", imageUrl);
                                     showImage(imageUrl);
                                 }
                             });
                         }
                     }
+                    String pictureName = taskSnapshot.getStorage().getPath();
+                    deal.setImageName(pictureName);
+                    Log.d("Name", pictureName);
                 }
             });
         }
@@ -170,14 +178,29 @@ public class DealActivity extends AppCompatActivity {
             databaseReference.child(deal.getID()).setValue(deal);
         }
     }
-    private void Delete(){
-        if (deal.getID() == null){
-            Toast.makeText(this, "Please Save Before Deleting any Deal",Toast.LENGTH_LONG).show();
+    private void Delete() {
+        if (deal.getID() == null) {
+            Toast.makeText(this, "Please Save Before Deleting any Deal", Toast.LENGTH_LONG).show();
             return;
-        }
-        else {
+        } else {
             databaseReference.child(deal.getID()).removeValue();
+            Log.d("image name", deal.getImageName());
+            if (deal.getImageName() != null && deal.getImageName().isEmpty() == false) {
+                StorageReference picRef = FirebaseUtil.firebaseStorage.getReference().child(deal.getImageName());
+                picRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("Delete Image", "Image Successfully Deleted");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("Delete Image", e.getMessage());
+                    }
+                });
+            }
         }
+
     }
     private void backList(){
         Intent backIntent = new Intent(this,ListActivity.class);
